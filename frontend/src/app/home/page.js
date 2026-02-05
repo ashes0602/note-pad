@@ -76,7 +76,6 @@ export default function Notepad() {
     "#fbb6ce"  // rose
   ];
 
-  // Fetch notes
   useEffect(() => {
     const fetchNotes = async () => {
       try {
@@ -90,14 +89,16 @@ export default function Notepad() {
     fetchNotes();
   }, []);
 
-  // Save new note → go to page
-  const handleNext = () => {
-    localStorage.setItem("formData", JSON.stringify(form));
-    router.push("/home/page");
-    setShowForm(false);
-  };
 
-  // Update note
+const handleNext = () => {
+  const textcolor = getTextColor(form.color); // Calculate text color
+  const formWithTextColor = { ...form, textcolor }; // Add it to form data
+  localStorage.setItem("formData", JSON.stringify(formWithTextColor));
+  router.push("/home/page");
+  setShowForm(false);
+};
+
+
   const handleEdit = async (id, updatedNote) => {
     try {
       const res = await fetch(`http://localhost:5000/auth/updatepage/${id}`, {

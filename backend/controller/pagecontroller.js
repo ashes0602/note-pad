@@ -3,28 +3,43 @@ import Page from "../models/page.js";
 // CREATE
 export const createPage = async (req, res) => {
   try {
-    const { title, color, content,textcolor } = req.body;
-    if (!title) return res.status(400).json({ message: "title is required" });
+    const { title, color, content, textcolor } = req.body;
+    
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: "Title is required" });
+    }
+    
+    if (!color) {
+      return res.status(400).json({ message: "Color is required" });
+    }
+    
+    if (!textcolor) {
+      return res.status(400).json({ message: "Text color is required" });
+    }
 
     const page = new Page({
-      title,
+      title: title.trim(),
       color,
-      content,
+      content: content || "",
       textcolor,
-      // userId: req.user?._id  // add this later when auth is wired
     });
+    
     const saved = await page.save();
+    console.log("✅ Page created:", saved);
     return res.status(201).json(saved);
   } catch (error) {
     console.error("❌ Error creating page:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ 
+      message: "Internal server error",
+      error: error.message 
+    });
   }
 };
 
-// READ ALL
 export const getPages = async (req, res) => {
   try {
     const pages = await Page.find().sort({ createdAt: -1 });
+    console.log(`✅ Retrieved ${pages.length} pages`);
     return res.json(pages);
   } catch (error) {
     console.error("❌ Error fetching pages:", error);
@@ -32,7 +47,7 @@ export const getPages = async (req, res) => {
   }
 };
 
-// READ ONE
+
 export const getPageById = async (req, res) => {
   try {
     const page = await Page.findById(req.params.id);
@@ -47,28 +62,35 @@ export const getPageById = async (req, res) => {
 // UPDATE
 export const updatePage = async (req, res) => {
   try {
-    const { title, color, content,textcolor } = req.body;
-    const pageId = req.params.id;
+    const { title, color, content, textcolor } = req.body;
+    
+    const updateFields = {};
+    if (title !== undefined) updateFields.title = title.trim();
+    if (color !== undefined) updateFields.color = color;
+    if (content !== undefined) updateFields.content = content;
+    if (textcolor !== undefined) updateFields.textcolor = textcolor;
 
     const updated = await Page.findByIdAndUpdate(
-      pageId,
-      { title, color, content,textcolor },
+      req.params.id,
+      updateFields,
       { new: true, runValidators: true }
     );
 
     if (!updated) return res.status(404).json({ message: "Page not found" });
+    console.log("✅ Page updated:", updated);
     return res.json(updated);
   } catch (error) {
     console.error("❌ Error during page update:", error);
-    return res.status(400).json({ message: "Invalid page id" });
+    return res.status(400).json({ message: "Invalid page id or data" });
   }
 };
 
-// DELETE
+
 export const deletePage = async (req, res) => {
   try {
     const deleted = await Page.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ message: "Page not found" });
+    console.log("✅ Page deleted:", deleted._id);
     return res.json({ message: "Page deleted successfully" });
   } catch (error) {
     console.error("❌ Error during page deletion:", error);
